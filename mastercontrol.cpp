@@ -145,6 +145,8 @@ void MasterControl::CreateScene()
 
     //Create camera
     world_.camera_ = new FinchyCam(context_, this);
+
+    AddGrowth(256);
 }
 
 void MasterControl::HandleUpdate(StringHash eventType, VariantMap &eventData)
@@ -156,6 +158,11 @@ void MasterControl::HandleSceneUpdate(StringHash eventType, VariantMap &eventDat
     using namespace SceneUpdate;
     float timeStep = eventData[P_TIMESTEP].GetFloat();
     time_ += timeStep;
+
+    //Wave bushes
+    for (unsigned b = 0; b < bushes_.Size(); b++){
+        bushes_[b]->SetMorphWeight(0, (0.32f+0.23f*sin( world_.scene_->GetElapsedTime()*0.01f)) *(0.5f+0.5f*sin(b + world_.scene_->GetElapsedTime()*1.23f)));
+    }
 }
 
 void MasterControl::HandlePostRenderUpdate(StringHash eventType, VariantMap &eventData)
@@ -187,10 +194,28 @@ Vector3 MasterControl::GetGroundPosition(Vector3 position)
             RayQueryResult result = hitResults[r];
             if (result.node_->GetNameHash()==StringHash("Island")){
                 Vector3 rayHitPos = result.position_;
-                if (rayHitPos.y_ < -0.15f) rayHitPos.y_ = -0.15f;
+                if (rayHitPos.y_ < -0.15f)
+                    rayHitPos.y_ = -0.15f;
                 return rayHitPos;
             }
         }
     }
     return Finchy::Scale(rayOrigin, Vector3(1.0f, 0.0f, 1.0f));
+}
+
+void MasterControl::AddGrowth(int number)
+{
+    for (int b = 0; b < number; b++){
+        Vector3 position = GetGroundPosition(Vector3(Random(-30.0f, 30.0f), 5.0f, Random(-20.0f, 20.0f)));
+        Node* bushNode = world_.scene_->CreateChild("Bush");
+        bushNode->SetPosition(position);
+        float width = Random(0.5f, 2.0f);
+        bushNode->SetScale(Vector3(width, Random(0.5f, 2.0f), width));
+        bushNode->Rotate(Quaternion(Random(-23.0f, 23.0f), Vector3::UP),TS_WORLD);
+        AnimatedModel* bushModel = bushNode->CreateComponent<AnimatedModel>();
+        bushes_.Push(bushModel);
+        bushModel->SetModel(cache_->GetResource<Model>("Resources/Models/Bush.mdl"));
+        bushModel->SetMaterial(cache_->GetResource<Material>("Resources/Materials/Bush.xml"));
+        bushModel->SetCastShadows(true);
+    }
 }

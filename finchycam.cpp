@@ -28,10 +28,11 @@ FinchyCam::FinchyCam(Context *context, MasterControl *masterControl):
     float viewRange= 123.0f;
     rootNode_ = masterControl_->world_.scene_->CreateChild("Camera");
     camera_ = rootNode_->CreateComponent<Camera>();
+    camera_->SetFov(60.0f);
     camera_->SetFarClip(viewRange);
     rootNode_->SetPosition(Vector3(0.0f, 0.0f, -23.0f));
     rootNode_->SetRotation(Quaternion(12.0f, 0.0f, 0.0f));
-    rootNode_->Translate(Vector3::BACK * 42.0f);
+    rootNode_->Translate(Vector3::BACK * 40.0f);
 
     Zone* zone = rootNode_->CreateComponent<Zone>();
     zone->SetAmbientColor(Color(0.666f, 0.75f, 0.75f));

@@ -168,7 +168,7 @@ void Bird::SetState(BirdState state)
                                 : Quaternion(0.0f, rotation.y_, 0.0f));
     }
     if (state == BirdState::Flying) {
-        if (!first_) stateDuration_ += 23.0f;
+        if (!first_) stateDuration_ += Random(5.0f, 10.0f);
         target_ = AirTarget();
         animCtrl_->Play("Resources/Models/Fly.ani", 0, true, 1.0f);
     }
@@ -237,7 +237,7 @@ Vector3 Bird::AirTarget()
 {
     float randomAngle = (2.0f*(Random(2)-0.5f)) * Random(10.0f, 42.0f);
     Vector3 planarDirection = (rootNode_->GetDirection() * (Vector3::ONE-Vector3::UP)).Normalized();
-    Vector3 newTarget = GetPosition() + (Random(2.0f, 10.0f) * (Quaternion(randomAngle, Vector3::UP) * planarDirection));
+    Vector3 newTarget = GetPosition() + (Random(5.0f, 10.0f) * (Quaternion(randomAngle, Vector3::UP) * planarDirection));
     float heightGain = Clamp((10.0f - target_.y_)/23.0f, 0.0f, 0.5f);
     newTarget.y_ = Clamp(target_.y_ + Random(-0.5f, 0.5f) + heightGain, 1.0f, 23.0f);
     newTarget = (newTarget + targetCenter_) * 0.5f;

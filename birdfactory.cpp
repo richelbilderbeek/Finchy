@@ -26,13 +26,13 @@ BirdFactory::BirdFactory(Context *context, MasterControl *masterControl) : Objec
     Model* birdModel = masterControl_->cache_->GetResource<Model>("Resources/Models/Finchy.mdl");
     genePairs_ = (int)birdModel->GetNumMorphs() + (int)Gene::Size;
 
-    int mainSpecies = 5;
-    int subSpecies = 5;
+    int mainSpecies = 2;
+    int subSpecies = 2;
     for (int m = 0; m < mainSpecies/*masterControl_->timeLine_.GetNumSpecies()*/; m++){
         CreateRandomSpecies(m*subSpecies);
         for (int s = 0; s < subSpecies; s++){
             if (s != 0) Speciate(m, m*subSpecies+s);
-            for (int b = 0; b < 10; b++){
+            for (int b = 0; b < 5; b++){
                 CreateBird(m*subSpecies+s, b == 0);
             }
         }

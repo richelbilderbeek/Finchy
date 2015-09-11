@@ -126,6 +126,7 @@ public:
     float GetTime() { return time_; }
     TimeLine timeLine_;
 private:
+    Vector<AnimatedModel*> bushes_;
     SharedPtr<UI> ui_;
     SharedPtr<Renderer> renderer_;
     SharedPtr<XMLFile> defaultStyle_;
@@ -145,6 +146,7 @@ private:
     void UpdateCursor(float timeStep);
 
     bool paused_;
+    void AddGrowth(int number);
 };
 
 #endif // MASTERCONTROL_H
