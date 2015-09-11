@@ -25,6 +25,7 @@ Bird::Bird(Context *context, MasterControl *masterControl, bool first) : Object(
     masterControl_{masterControl},
     birdFactory_{masterControl->birdFactory_},
     velocity_{Vector3::ZERO},
+    maxVelocity_{20.0f},
     target_{targetCenter_},
     species_{0},
     previousSpecies_{0},
@@ -182,7 +183,8 @@ void Bird::Fly(float timeStep)
 {
     Vector3 targetDelta = target_ - GetPosition();
     Vector3 beforeVelocity = velocity_;
-    velocity_ += 5.0f * timeStep * targetDelta.Normalized()*Clamp(targetDelta.Length(), 2.0f, 3.0f);
+    bool limit = velocity_.Angle(targetDelta) < 90.0f && velocity_.Length() > maxVelocity_;
+    if (!limit) velocity_ += 5.0f * timeStep * targetDelta.Normalized()*Clamp(targetDelta.Length(), 2.0f, 3.0f);
     if (targetDelta.Angle(rootNode_->GetDirection()) > 90.0f && seenTarget_){
         target_ = AirTarget();
         seenTarget_ = false;

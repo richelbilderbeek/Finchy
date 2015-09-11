@@ -34,7 +34,7 @@ FinchyCam::FinchyCam(Context *context, MasterControl *masterControl):
     rootNode_->Translate(Vector3::BACK * 42.0f);
 
     Zone* zone = rootNode_->CreateComponent<Zone>();
-    zone->SetAmbientColor(Color(0.42f, 0.5f, 0.5f));
+    zone->SetAmbientColor(Color(0.666f, 0.75f, 0.75f));
     zone->SetFogEnd(viewRange);
     zone->SetFogColor(Color::WHITE);
     zone->SetFogStart(42.0f);

@@ -51,6 +51,7 @@ private:
 
     SharedPtr<Node> rootNode_;
     Vector3 velocity_;
+    float maxVelocity_;
     Vector3 targetCenter_;
     Vector3 target_;
     BirdState state_;

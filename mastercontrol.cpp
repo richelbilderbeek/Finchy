@@ -38,7 +38,7 @@ void MasterControl::Setup()
 {
     engineParameters_["WindowTitle"] = "Finchy";
     engineParameters_["LogName"] = GetSubsystem<FileSystem>()->GetAppPreferencesDir("urho3d", "logs")+"TestVoxelWidget.log";
-    engineParameters_["FullScreen"] = false;
+//    engineParameters_["FullScreen"] = false;
     engineParameters_["Headless"] = false;
 //    engineParameters_["WindowWidth"] = 1600;
 //    engineParameters_["WindowHeight"] = 900;

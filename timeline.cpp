@@ -35,37 +35,36 @@ TimeLine::TimeLine()
         if (id_str.empty()) break;
         f >> time_str >> type_str >> species1_str >> species2_str >> species3_str;
 
-        Finchy::Event d;
+        Finchy::Event* d = new Finchy::Event();
 
-        d.id_ = std::stoi(id_str.substr(1,id_str.size() - 3));
+        d->id_ = std::stoi(id_str.substr(1,id_str.size() - 3));
 
         char eventType_char = type_str[1];
         switch (eventType_char){
-        case 'I': d.type_ = Finchy::EventType::Immigration;  break;
-        case 'A': d.type_ = Finchy::EventType::Anagenesis;   break;
-        case 'C': d.type_ = Finchy::EventType::Cladogenesis; break;
-        case 'E': d.type_ = Finchy::EventType::Extinction;   break;
+        case 'I': d->type_ = Finchy::EventType::Immigration;  break;
+        case 'A': d->type_ = Finchy::EventType::Anagenesis;   break;
+        case 'C': d->type_ = Finchy::EventType::Cladogenesis; break;
+        case 'E': d->type_ = Finchy::EventType::Extinction;   break;
         default: break;
         }
 
-        d.time_ = std::stod(time_str.substr(1,time_str.size() - 2));
+        d->time_ = std::stod(time_str.substr(1,time_str.size() - 2));
 
         int species1 = ReadSpecies(species1_str);
         int species2 = ReadSpecies(species2_str);
         int species3 = ReadSpecies(species3_str);
         if (species1) {
-            d.species_.Push(species1);
+            d->species_.Push(species1);
             if (!speciesIds_.Contains(species1)) speciesIds_.Push(species1);
         }
         if (species2) {
-            d.species_.Push(species2);
+            d->species_.Push(species2);
             if (!speciesIds_.Contains(species2)) speciesIds_.Push(species2);
         }
         if (species3) {
-            d.species_.Push(species3);
+            d->species_.Push(species3);
             if (!speciesIds_.Contains(species3)) speciesIds_.Push(species3);
         }
-
         events_.Push(d);
     }
 }

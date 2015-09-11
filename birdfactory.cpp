@@ -26,10 +26,15 @@ BirdFactory::BirdFactory(Context *context, MasterControl *masterControl) : Objec
     Model* birdModel = masterControl_->cache_->GetResource<Model>("Resources/Models/Finchy.mdl");
     genePairs_ = (int)birdModel->GetNumMorphs() + (int)Gene::Size;
 
-    for (int s = 0; s < 5/*masterControl_->timeLine_.GetNumSpecies()*/; s++){
-        CreateRandomSpecies(s);
-        for (int b = 0; b < 42; b++){
-            CreateBird(s, b == 0);
+    int mainSpecies = 5;
+    int subSpecies = 5;
+    for (int m = 0; m < mainSpecies/*masterControl_->timeLine_.GetNumSpecies()*/; m++){
+        CreateRandomSpecies(m*subSpecies);
+        for (int s = 0; s < subSpecies; s++){
+            if (s != 0) Speciate(m, m*subSpecies+s);
+            for (int b = 0; b < 10; b++){
+                CreateBird(m*subSpecies+s, b == 0);
+            }
         }
     }
 }
@@ -70,10 +75,9 @@ Vector3 BirdFactory::SpotToTargetCenter(const IntVector2 spot, bool first)
     }
 }
 
-///Should include spot differentiation
-Vector<float>* BirdFactory::Speciate(int id)
+void BirdFactory::Speciate(int originalId, int newId)
 {
-    Vector<float>* baseSpecies = species_[id];
+    Vector<float>* baseSpecies = species_[originalId];
     Vector<float>* newSpecies = new Vector<float>();
 
     //Shrink
@@ -81,9 +85,9 @@ Vector<float>* BirdFactory::Speciate(int id)
                        0.5f, 2.0f);
     //Change color
     Color color = Color(
-            Clamp(baseSpecies->At((int)Gene::Red) + Random(-0.1f, 0.075f), 0.0f, 1.0f),
-            Clamp(baseSpecies->At((int)Gene::Green) + Random(-0.1f, 0.075f), 0.0f, 1.0f),
-            Clamp(baseSpecies->At((int)Gene::Blue) + Random(-0.1f, 0.075f), 0.0f, 1.0f));
+            Clamp(baseSpecies->At((int)Gene::Red) + Random(-0.1f, 0.25f), 0.0f, 1.0f),
+            Clamp(baseSpecies->At((int)Gene::Green) + Random(-0.1f, 0.25f), 0.0f, 1.0f),
+            Clamp(baseSpecies->At((int)Gene::Blue) + Random(-0.1f, 0.25f), 0.0f, 1.0f));
     //Scramble genes
     for (int g = 0; g <= genePairs_; g++){
         switch (g){
@@ -104,19 +108,24 @@ Vector<float>* BirdFactory::Speciate(int id)
             break;
         }
     }
-    return newSpecies;
+    species_[newId] = newSpecies;
+    spots_[newId] = CreateSpot(spots_[originalId]);
 }
 
 IntVector2 BirdFactory::CreateSpot(IntVector2 original)
 {
     if (original != IntVector2::ZERO){
+        int tries = 0;
         IntVector2 jittered(original);
         while (spots_.Values().Contains(jittered)){
+            if (tries > 23) return CreateSpot();
             IntVector2 jitter = IntVector2(Random(2, 3) * Finchy::RandomSign(),
                                            Random(2, 3) * Finchy::RandomSign());
             jitter.x_ = Clamp(jitter.x_, 1, 10);
             jitter.y_ = Clamp(jitter.y_, 1, 10);
             jittered = original + jitter;
+
+            tries++;
         }
         return jittered;
     }

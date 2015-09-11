@@ -54,7 +54,7 @@ private:
     HashMap<int, IntVector2> spots_;
 
     void CreateRandomSpecies(int id);
-    Vector<float> *Speciate(int id);
+    void Speciate(int originalId, int newId);
     void CreateBird(int id, bool first = false);
     IntVector2 CreateSpot(IntVector2 original = IntVector2::ZERO);
 };
