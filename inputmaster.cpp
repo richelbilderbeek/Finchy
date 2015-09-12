@@ -38,6 +38,7 @@ void InputMaster::HandleKeyDown(StringHash eventType, VariantMap &eventData)
     int key = eventData[P_KEY].GetInt();
     pressedKeys_.Insert(key);
 
+    Graphics* graphics = GetSubsystem<Graphics>();
     switch (key){
         //Exit when ESC is pressed
     case KEY_ESC:{
@@ -45,7 +46,6 @@ void InputMaster::HandleKeyDown(StringHash eventType, VariantMap &eventData)
     } break;
         //Take screenshot
     case KEY_9:{
-        Graphics* graphics = GetSubsystem<Graphics>();
         Image screenshot(context_);
         graphics->TakeScreenShot(screenshot);
         //Here we save in the Data folder with date and time appended
@@ -53,6 +53,15 @@ void InputMaster::HandleKeyDown(StringHash eventType, VariantMap &eventData)
                 Time::GetTimeStamp().Replaced(':', '_').Replaced('.', '_').Replaced(' ', '_')+".png";
         //Log::Write(1, fileName);
         screenshot.SavePNG(fileName);
+    } break;
+    case KEY_F:{
+        graphics->ToggleFullscreen();
+    } break;
+    case KEY_KP_PLUS: {
+        masterControl_->SetSpeed(masterControl_->GetSpeed()+0.1f);
+    } break;
+    case KEY_KP_MINUS: {
+        masterControl_->SetSpeed(masterControl_->GetSpeed()-0.1f);
     } break;
     default: break;
     }

@@ -124,7 +124,9 @@ public:
     bool OctreeRaycast(Ray &ray, PODVector<RayQueryResult> &hitResults, float maxDistance = 23.0f);
     Vector3 GetGroundPosition(Vector3 position);
     float GetTime() { return time_; }
-    TimeLine timeLine_;
+    TimeLine* timeLine_;
+    void SetSpeed(float speed) { speed_ = Clamp(speed, 0.0f, 10.0f); }
+    float GetSpeed() { return speed_; }
 private:
     Vector<AnimatedModel*> bushes_;
     SharedPtr<UI> ui_;
@@ -140,13 +142,13 @@ private:
 
     void HandleSceneUpdate(StringHash eventType, VariantMap& eventData);
     void HandleUpdate(StringHash eventType, VariantMap& eventData);
-    void HandlePostRenderUpdate(StringHash eventType, VariantMap& eventData);
 
     void CreatePlatform(const Vector3 pos);
     void UpdateCursor(float timeStep);
 
     bool paused_;
     void AddGrowth(int number);
+    void ProcessEvent(Finchy::Event *event, bool undo = false);
 };
 
 #endif // MASTERCONTROL_H

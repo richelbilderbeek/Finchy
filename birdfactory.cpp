@@ -32,7 +32,7 @@ BirdFactory::BirdFactory(Context *context, MasterControl *masterControl) : Objec
         CreateRandomSpecies(m*subSpecies);
         for (int s = 0; s < subSpecies; s++){
             if (s != 0) Speciate(m, m*subSpecies+s);
-            for (int b = 0; b < 5; b++){
+            for (int b = 0; b < 42; b++){
                 CreateBird(m*subSpecies+s, b == 0);
             }
         }

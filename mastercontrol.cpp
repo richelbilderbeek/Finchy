@@ -29,7 +29,7 @@ MasterControl::MasterControl(Context *context):
     paused_{false},
     time_{0.0f},
     speed_{1.0f},
-    timeLine_{}
+    timeLine_{new TimeLine()}
 {
 }
 
@@ -38,7 +38,7 @@ void MasterControl::Setup()
 {
     engineParameters_["WindowTitle"] = "Finchy";
     engineParameters_["LogName"] = GetSubsystem<FileSystem>()->GetAppPreferencesDir("urho3d", "logs")+"TestVoxelWidget.log";
-//    engineParameters_["FullScreen"] = false;
+    engineParameters_["FullScreen"] = false;
     engineParameters_["Headless"] = false;
 //    engineParameters_["WindowWidth"] = 1600;
 //    engineParameters_["WindowHeight"] = 900;
@@ -135,7 +135,6 @@ void MasterControl::CreateScene()
     islandModel->SetMaterial(cache_->GetResource<Material>("Resources/Materials/Island.xml"));
 
     Node* waterNode = world_.scene_->CreateChild("Water");
-//    waterNode->SetPosition(Vector3::DOWN*3.0f);
     waterNode->SetScale(256.0f);
     StaticModel* waterModel = waterNode->CreateComponent<StaticModel>();
     waterModel->SetModel(cache_->GetResource<Model>("Models/Plane.mdl"));
@@ -146,7 +145,7 @@ void MasterControl::CreateScene()
     //Create camera
     world_.camera_ = new FinchyCam(context_, this);
 
-    AddGrowth(256);
+    AddGrowth(64);
 }
 
 void MasterControl::HandleUpdate(StringHash eventType, VariantMap &eventData)
@@ -157,16 +156,21 @@ void MasterControl::HandleSceneUpdate(StringHash eventType, VariantMap &eventDat
 {
     using namespace SceneUpdate;
     float timeStep = eventData[P_TIMESTEP].GetFloat();
-    time_ += timeStep;
+    float deltaTime = timeStep*speed_;
+    PODVector<Finchy::Event*> events();
+    if (timeLine_->GetEvents(events, time_, time_+deltaTime)){
+        for (unsigned e = 0; e < events.Size(); e++){
+            ProcessEvent(events[e], deltaTime < 0.0f);
+        }
+    }
+    time_ += deltaTime;
+
+
 
     //Wave bushes
     for (unsigned b = 0; b < bushes_.Size(); b++){
-        bushes_[b]->SetMorphWeight(0, (0.32f+0.23f*sin( world_.scene_->GetElapsedTime()*0.01f)) *(0.5f+0.5f*sin(b + world_.scene_->GetElapsedTime()*1.23f)));
+        bushes_[b]->SetMorphWeight(0, (0.32f+0.21f*sin( world_.scene_->GetElapsedTime()*0.011f) *(0.5f+0.5f*sin(b + world_.scene_->GetElapsedTime()*(1.42f+0.01f*b)))));
     }
-}
-
-void MasterControl::HandlePostRenderUpdate(StringHash eventType, VariantMap &eventData)
-{
 }
 
 void MasterControl::Exit()
@@ -185,11 +189,11 @@ bool MasterControl::OctreeRaycast(Ray& ray, PODVector<RayQueryResult> &hitResult
 Vector3 MasterControl::GetGroundPosition(Vector3 position)
 {
     //Pick a random spot on the island
-    Vector3 rayOrigin = Finchy::Scale(position, Vector3::ONE-Vector3::UP)+Vector3::UP*23.0f;
+    Vector3 rayOrigin = Finchy::Scale(position, Vector3::ONE-Vector3::UP)+Vector3::UP*32.0f;
 
     Ray downwardsRay = Ray(rayOrigin, Vector3::DOWN);
     PODVector<RayQueryResult> hitResults;
-    if (OctreeRaycast(downwardsRay, hitResults, 42.0f)){
+    if (OctreeRaycast(downwardsRay, hitResults, 64.0f)){
         for (unsigned r = 0; r < hitResults.Size(); r++){
             RayQueryResult result = hitResults[r];
             if (result.node_->GetNameHash()==StringHash("Island")){
@@ -206,16 +210,53 @@ Vector3 MasterControl::GetGroundPosition(Vector3 position)
 void MasterControl::AddGrowth(int number)
 {
     for (int b = 0; b < number; b++){
-        Vector3 position = GetGroundPosition(Vector3(Random(-30.0f, 30.0f), 5.0f, Random(-20.0f, 20.0f)));
+        Vector3 position = GetGroundPosition(Vector3(Random(-30.0f, 30.0f), 5.0f, Random(-15.0f, 20.0f)));
         Node* bushNode = world_.scene_->CreateChild("Bush");
         bushNode->SetPosition(position);
-        float width = Random(0.5f, 2.0f);
-        bushNode->SetScale(Vector3(width, Random(0.5f, 2.0f), width));
-        bushNode->Rotate(Quaternion(Random(-23.0f, 23.0f), Vector3::UP),TS_WORLD);
+        float width = Random(0.75f, 2.0f);
+        bushNode->SetScale(Vector3(width, Random(0.5f, 1.5f), width));
+        bushNode->Rotate(Quaternion(Random(360.0f), Vector3::UP),TS_WORLD);
         AnimatedModel* bushModel = bushNode->CreateComponent<AnimatedModel>();
         bushes_.Push(bushModel);
         bushModel->SetModel(cache_->GetResource<Model>("Resources/Models/Bush.mdl"));
         bushModel->SetMaterial(cache_->GetResource<Material>("Resources/Materials/Bush.xml"));
         bushModel->SetCastShadows(true);
+    }
+}
+
+void MasterControl::ProcessEvent(Finchy::Event* event, bool undo)
+{
+    if (!undo){
+        switch (event->type_){
+        case Finchy::EventType::Immigration: {
+
+        } break;
+        case Finchy::EventType::Anagenesis: {
+
+        } break;
+        case Finchy::EventType::Cladogenesis: {
+
+        } break;
+        case Finchy::EventType::Extinction: {
+
+        } break;
+        default:break;
+        }
+    } else {
+        switch (event->type_){
+        case Finchy::EventType::Immigration: {
+
+        } break;
+        case Finchy::EventType::Anagenesis: {
+
+        } break;
+        case Finchy::EventType::Cladogenesis: {
+
+        } break;
+        case Finchy::EventType::Extinction: {
+
+        } break;
+        default:break;
+        }
     }
 }
