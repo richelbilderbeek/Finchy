@@ -115,6 +115,7 @@ public:
     SharedPtr<ResourceCache> cache_;
     SharedPtr<Graphics> graphics_;
     SharedPtr<BirdFactory> birdFactory_;
+    Node* skyNode_;
 
     virtual void Setup();
     virtual void Start();
@@ -125,14 +126,16 @@ public:
     Vector3 GetGroundPosition(Vector3 position);
     float GetTime() { return time_; }
     TimeLine* timeLine_;
-    void SetSpeed(float speed) { speed_ = Clamp(speed, 0.0f, 10.0f); }
+    void SetSpeed(float speed) { speed_ = Clamp(speed, -10.0f, 10.0f); }
     float GetSpeed() { return speed_; }
+    Vector3 TimeToMarkerPosition(float time);
 private:
     Vector<AnimatedModel*> bushes_;
     SharedPtr<UI> ui_;
     SharedPtr<Renderer> renderer_;
     SharedPtr<XMLFile> defaultStyle_;
     float time_;
+    Node* needle_;
     float speed_;
 
     void CreateConsoleAndDebugHud();

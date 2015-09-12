@@ -45,7 +45,7 @@ void InputMaster::HandleKeyDown(StringHash eventType, VariantMap &eventData)
         masterControl_->Exit();
     } break;
         //Take screenshot
-    case KEY_9:{
+    case KEY_S:{
         Image screenshot(context_);
         graphics->TakeScreenShot(screenshot);
         //Here we save in the Data folder with date and time appended
@@ -62,6 +62,45 @@ void InputMaster::HandleKeyDown(StringHash eventType, VariantMap &eventData)
     } break;
     case KEY_KP_MINUS: {
         masterControl_->SetSpeed(masterControl_->GetSpeed()-0.1f);
+    } break;
+    case KEY_KP_0: case KEY_0: {
+        masterControl_->SetSpeed(0.0f);
+    } break;
+    case KEY_KP_1: case KEY_1: {
+        masterControl_->SetSpeed(0.1f);
+    } break;
+    case KEY_KP_2: case KEY_2: {
+        masterControl_->SetSpeed(0.2f);
+    } break;
+    case KEY_KP_3: case KEY_3: {
+        masterControl_->SetSpeed(0.3f);
+    } break;
+    case KEY_KP_4: case KEY_4: {
+        masterControl_->SetSpeed(0.4f);
+    } break;
+    case KEY_KP_5: case KEY_5: {
+        masterControl_->SetSpeed(0.5f);
+    } break;
+    case KEY_KP_6: case KEY_6: {
+        masterControl_->SetSpeed(0.6f);
+    } break;
+    case KEY_KP_7: case KEY_7: {
+        masterControl_->SetSpeed(0.7f);
+    } break;
+    case KEY_KP_8: case KEY_8: {
+        masterControl_->SetSpeed(0.8f);
+    } break;
+    case KEY_KP_9: case KEY_9: {
+        masterControl_->SetSpeed(0.9f);
+    } break;
+    case KEY_I: {
+        masterControl_->SetSpeed(-masterControl_->GetSpeed());
+    } break;
+    case KEY_KP_MULTIPLY: {
+        masterControl_->SetSpeed(masterControl_->GetSpeed()*2.0f);
+    } break;
+    case KEY_KP_DIVIDE: {
+        masterControl_->SetSpeed(masterControl_->GetSpeed()*0.5f);
     } break;
     default: break;
     }

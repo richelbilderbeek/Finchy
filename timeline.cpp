@@ -66,7 +66,7 @@ TimeLine::TimeLine()
             if (!speciesIds_.Contains(species3)) speciesIds_.Push(species3);
         }
         events_.Push(d);
-    }
+    }    
 }
 
 int TimeLine::ReadSpecies(std::string species)
@@ -76,13 +76,18 @@ int TimeLine::ReadSpecies(std::string species)
     else return 0;
 }
 
-bool TimeLine::GetEvents(PODVector<Finchy::Event *> &events, float from, float til)
+bool TimeLine::GetEvents(Vector<Finchy::Event *> &events, float from, float til)
 {
     for (unsigned e = 0; e < events_.Size(); e++){
         float eventTime = events_[e]->time_;
-        if (eventTime > from && eventTime < til){
+        if (eventTime < from && eventTime > til){
             events.Push(events_[e]);
         }
     }
     return !events.Empty();
+}
+
+std::pair<float, float> TimeLine::GetBeginEnd()
+{
+    return {ceil(events_[0]->time_), floor(events_.Back()->time_)};
 }

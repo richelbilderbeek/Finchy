@@ -27,9 +27,9 @@ DEFINE_APPLICATION_MAIN(MasterControl);
 MasterControl::MasterControl(Context *context):
     Application(context),
     paused_{false},
-    time_{0.0f},
-    speed_{1.0f},
-    timeLine_{new TimeLine()}
+    timeLine_{new TimeLine()},
+    time_{timeLine_->GetBeginEnd().first},
+    speed_{0.023f}
 {
 }
 
@@ -38,10 +38,10 @@ void MasterControl::Setup()
 {
     engineParameters_["WindowTitle"] = "Finchy";
     engineParameters_["LogName"] = GetSubsystem<FileSystem>()->GetAppPreferencesDir("urho3d", "logs")+"TestVoxelWidget.log";
-    engineParameters_["FullScreen"] = false;
+//    engineParameters_["FullScreen"] = false;
     engineParameters_["Headless"] = false;
-//    engineParameters_["WindowWidth"] = 1600;
-//    engineParameters_["WindowHeight"] = 900;
+    engineParameters_["WindowWidth"] = 1600;
+    engineParameters_["WindowHeight"] = 900;
 }
 void MasterControl::Start()
 {
@@ -55,15 +55,6 @@ void MasterControl::Start()
     CreateScene();
     CreateUI();
     SubscribeToEvents();
-
-    /*
-    Sound* music = cache_->GetResource<Sound>("Resources/Music/Macroform_-_Root.ogg");
-    music->SetLooped(true);
-    Node* musicNode = world.scene->CreateChild("Music");
-    SoundSource* musicSource = musicNode->CreateComponent<SoundSource>();
-    musicSource->SetSoundType(SOUND_MUSIC);
-    musicSource->Play(music);
-    */
 }
 void MasterControl::Stop()
 {
@@ -95,6 +86,42 @@ void MasterControl::CreateUI()
     world_.cursor.uiCursor_->SetVisible(false);
     ui->SetCursor(world_.cursor.uiCursor_);
     world_.cursor.uiCursor_->SetPosition(graphics_->GetWidth()/2, graphics_->GetHeight()/2);
+
+    for (unsigned e = 0; e < timeLine_->events_.Size(); e++)
+    {
+        Node* markerNode = world_.scene_->CreateChild("Marker");
+        markerNode->SetPosition(TimeToMarkerPosition(timeLine_->events_[e]->time_));
+        markerNode->SetScale(Vector3(1.0f, 1.0f, 0.5f));
+        StaticModel* markerModel = markerNode->CreateComponent<StaticModel>();
+        switch (timeLine_->events_[e]->type_){
+        case Finchy::EventType::Immigration: {
+            markerModel->SetModel(cache_->GetResource<Model>("Resources/Models/ImmigrationMarker.mdl"));
+            markerModel->SetMaterial(cache_->GetResource<Material>("Resources/Materials/Gold.xml"));
+            markerNode->Translate(Vector3::FORWARD*0.4f);
+        } break;
+        case Finchy::EventType::Anagenesis: {
+            markerModel->SetModel(cache_->GetResource<Model>("Resources/Models/AnagenesisMarker.mdl"));
+            markerModel->SetMaterial(cache_->GetResource<Material>("Resources/Materials/Bronze.xml"));
+            markerNode->Translate(Vector3::FORWARD*0.3f);
+        } break;
+        case Finchy::EventType::Cladogenesis: {
+            markerModel->SetModel(cache_->GetResource<Model>("Resources/Models/CladogenesisMarker.mdl"));
+            markerModel->SetMaterial(cache_->GetResource<Material>("Resources/Materials/Silver.xml"));
+            markerNode->Translate(Vector3::FORWARD*0.2f);
+        } break;
+        case Finchy::EventType::Extinction: {
+            markerModel->SetModel(cache_->GetResource<Model>("Resources/Models/ExtinctionMarker.mdl"));
+            markerModel->SetMaterial(cache_->GetResource<Material>("Resources/Materials/Black.xml"));
+            markerNode->Translate(Vector3::FORWARD*0.1f);
+        } break;
+        default:break;
+        }
+    }
+}
+
+Vector3 MasterControl::TimeToMarkerPosition(float time)
+{
+    return Vector3(9.0f-4.5f*time, 0.0f, -53.0f);
 }
 
 void MasterControl::CreateScene()
@@ -105,9 +132,9 @@ void MasterControl::CreateScene()
     world_.scene_->CreateComponent<DebugRenderer>();
 
     //PhysicsWorld* physicsWorld = world.scene->CreateComponent<PhysicsWorld>();
-    Node* skyNode = world_.scene_->CreateChild("Sky");
-    skyNode->SetScale(500.0f); // The scale actually does not matter
-    Skybox* skybox = skyNode->CreateComponent<Skybox>();
+    skyNode_ = world_.scene_->CreateChild("Sky");
+    skyNode_->SetScale(500.0f); // The scale actually does not matter
+    Skybox* skybox = skyNode_->CreateComponent<Skybox>();
     skybox->SetModel(cache_->GetResource<Model>("Models/Box.mdl"));
     skybox->SetMaterial(cache_->GetResource<Material>("Materials/Skybox.xml"));
 
@@ -141,7 +168,11 @@ void MasterControl::CreateScene()
     waterModel->SetMaterial(cache_->GetResource<Material>("Resources/Materials/Water.xml"));
 
     birdFactory_ = new BirdFactory(context_, this);
-
+    birdFactory_->Evolve(timeLine_);
+    needle_ = world_.scene_->CreateChild("Needle");
+    StaticModel* needleModel_ = needle_->CreateComponent<StaticModel>();
+    needleModel_->SetModel(cache_->GetResource<Model>("Resources/Models/TimeMarker.mdl"));
+    needleModel_->SetMaterial(cache_->GetResource<Material>("Resources/Materials/Green.xml"));
     //Create camera
     world_.camera_ = new FinchyCam(context_, this);
 
@@ -156,20 +187,28 @@ void MasterControl::HandleSceneUpdate(StringHash eventType, VariantMap &eventDat
 {
     using namespace SceneUpdate;
     float timeStep = eventData[P_TIMESTEP].GetFloat();
-    float deltaTime = timeStep*speed_;
-    PODVector<Finchy::Event*> events();
+    float deltaTime = -timeStep*speed_;
+    Vector<Finchy::Event*> events;
     if (timeLine_->GetEvents(events, time_, time_+deltaTime)){
         for (unsigned e = 0; e < events.Size(); e++){
-            ProcessEvent(events[e], deltaTime < 0.0f);
+            ProcessEvent(events[e], deltaTime > 0.0f);
         }
     }
     time_ += deltaTime;
+    needle_->SetPosition(TimeToMarkerPosition(time_));
 
-
+    skyNode_->Rotate(Quaternion(deltaTime*5.0f, Vector3::UP));
 
     //Wave bushes
     for (unsigned b = 0; b < bushes_.Size(); b++){
         bushes_[b]->SetMorphWeight(0, (0.32f+0.21f*sin( world_.scene_->GetElapsedTime()*0.011f) *(0.5f+0.5f*sin(b + world_.scene_->GetElapsedTime()*(1.42f+0.01f*b)))));
+    }
+
+    Vector<int> speciesIds = birdFactory_->alive_.Keys();
+    for (unsigned s = 0; s < speciesIds.Size(); s++){
+        int id = speciesIds[s];
+        if (birdFactory_->alive_[id] == true && birdFactory_->birdNumbers_[id] < 23)
+            birdFactory_->CreateBird(id);
     }
 }
 
@@ -229,16 +268,17 @@ void MasterControl::ProcessEvent(Finchy::Event* event, bool undo)
     if (!undo){
         switch (event->type_){
         case Finchy::EventType::Immigration: {
-
+            birdFactory_->CreateBird(event->species_[0], true);
         } break;
         case Finchy::EventType::Anagenesis: {
-
+            birdFactory_->Anagenesis(event->species_[0], event->species_[1], true);
         } break;
         case Finchy::EventType::Cladogenesis: {
-
+            birdFactory_->Anagenesis(event->species_[0], event->species_[1], true);
+            birdFactory_->CreateBird(event->species_[2], true);
         } break;
         case Finchy::EventType::Extinction: {
-
+            birdFactory_->Extinction(event->species_[0]);
         } break;
         default:break;
         }

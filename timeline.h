@@ -41,14 +41,17 @@ struct Event{
 
 class TimeLine
 {
+    friend class MasterControl;
+    friend class BirdFactory;
 public:
     TimeLine();
 
     int GetNumSpecies() { int num = speciesIds_.Size(); return num; }
-    bool GetEvents(PODVector<Finchy::Event*> &events, float from, float til);
+    bool GetEvents(Vector<Finchy::Event *> &events, float from, float til);
+    std::pair<float, float> GetBeginEnd();
 private:
-    Vector<int> speciesIds_;
     Vector<Finchy::Event*> events_;
+    Vector<int> speciesIds_;
     int ReadSpecies(std::string species);
 };
 

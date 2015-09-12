@@ -30,7 +30,7 @@ class Sprite;
 
 using namespace Urho3D;
 
-enum class BirdState { Standing, Hopping, LiftingOff, Flying, Landing };
+enum class BirdState { Standing, Hopping, LiftingOff, Flying, Landing, Extinct };
 
 class Bird : public Object
 {
@@ -39,11 +39,13 @@ public:
     Bird(Context* context, MasterControl* masterControl, bool first = false);
 
     bool first_;
+    int speciesId_;
     void Set(Vector3 position);
     Vector3 GetPosition() { return rootNode_->GetWorldPosition(); }
     bool IsEnabled() { return rootNode_->IsEnabled(); }
-    void SetSpecies(Vector<float> *species, Vector3 targetCenter);
+    void SetSpecies(Vector<float> *species, Vector3 targetCenter, int id);
     void Morph();
+    void Die(bool undo = false);
     BirdState GetState();
 private:
     MasterControl* masterControl_;
@@ -57,6 +59,7 @@ private:
     BirdState state_;
     bool seenTarget_;
     bool touchDown_;
+    bool dead_;
 
     AnimatedModel* birdModel_;
     SharedPtr<Material> birdMaterial_;
@@ -68,6 +71,7 @@ private:
     float stateDuration_;
     Vector<float>* species_;
     Vector<float>* previousSpecies_;
+
 
     void HandleUpdate(StringHash eventType, VariantMap &eventData);
     void Disable();

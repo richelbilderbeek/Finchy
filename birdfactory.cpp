@@ -25,17 +25,26 @@ BirdFactory::BirdFactory(Context *context, MasterControl *masterControl) : Objec
 {
     Model* birdModel = masterControl_->cache_->GetResource<Model>("Resources/Models/Finchy.mdl");
     genePairs_ = (int)birdModel->GetNumMorphs() + (int)Gene::Size;
+}
 
-    int mainSpecies = 2;
-    int subSpecies = 2;
-    for (int m = 0; m < mainSpecies/*masterControl_->timeLine_.GetNumSpecies()*/; m++){
-        CreateRandomSpecies(m*subSpecies);
-        for (int s = 0; s < subSpecies; s++){
-            if (s != 0) Speciate(m, m*subSpecies+s);
-            for (int b = 0; b < 42; b++){
-                CreateBird(m*subSpecies+s, b == 0);
-            }
-        }
+void BirdFactory::Evolve(TimeLine* timeLine)
+{
+    for (unsigned e = 0; e < timeLine->events_.Size(); e++)
+    {
+        Finchy::Event* event = timeLine->events_[e];
+        switch (event->type_){
+                case Finchy::EventType::Immigration: {
+                    CreateRandomSpecies(event->species_[0]);
+                } break;
+                case Finchy::EventType::Anagenesis: {
+                    Speciate(event->species_[0], event->species_[1]);
+                } break;
+                case Finchy::EventType::Cladogenesis: {
+                    Speciate(event->species_[0], event->species_[1]);
+                    Speciate(event->species_[0], event->species_[2]);
+                } break;
+                default:break;
+                }
     }
 }
 
@@ -58,6 +67,7 @@ void BirdFactory::CreateRandomSpecies(int id)
     }
     species_[id] = newSpecies;
     spots_[id] = CreateSpot();
+    alive_[id] = false;
 }
 
 Vector3 BirdFactory::SpotToTargetCenter(const IntVector2 spot, bool first)
@@ -85,9 +95,9 @@ void BirdFactory::Speciate(int originalId, int newId)
                        0.5f, 2.0f);
     //Change color
     Color color = Color(
-            Clamp(baseSpecies->At((int)Gene::Red) + Random(-0.1f, 0.25f), 0.0f, 1.0f),
-            Clamp(baseSpecies->At((int)Gene::Green) + Random(-0.1f, 0.25f), 0.0f, 1.0f),
-            Clamp(baseSpecies->At((int)Gene::Blue) + Random(-0.1f, 0.25f), 0.0f, 1.0f));
+            Clamp(baseSpecies->At((int)Gene::Red) + Finchy::RandomSign()*Random(0.125f, 0.25f), 0.0f, 1.0f),
+            Clamp(baseSpecies->At((int)Gene::Green) + Finchy::RandomSign()*Random(0.125f, 0.25f), 0.0f, 1.0f),
+            Clamp(baseSpecies->At((int)Gene::Blue) + Finchy::RandomSign()*Random(0.125f, 0.25f), 0.0f, 1.0f));
     //Scramble genes
     for (int g = 0; g <= genePairs_; g++){
         switch (g){
@@ -101,8 +111,7 @@ void BirdFactory::Speciate(int originalId, int newId)
             break;
         default:
             float originalGene = baseSpecies->At(g);
-            float change = Random(-0.1f, 0.1f);
-            change += change < 0.0f ? -0.23f : 0.23f;
+            float change = Finchy::RandomSign()*Random(0.5f, 0.75f);
             if (originalGene + change > 1.0f || originalGene + change < 0.0f) change *= Random(-0.1f, -0.23f);
             newSpecies->Push(Clamp(originalGene + change, 0.0f, 1.0f));
             break;
@@ -110,6 +119,7 @@ void BirdFactory::Speciate(int originalId, int newId)
     }
     species_[newId] = newSpecies;
     spots_[newId] = CreateSpot(spots_[originalId]);
+    alive_[newId] = false;
 }
 
 IntVector2 BirdFactory::CreateSpot(IntVector2 original)
@@ -142,25 +152,30 @@ IntVector2 BirdFactory::CreateSpot(IntVector2 original)
 //{
 
 //}
-//void BirdFactory::Anagenesis(int id)
-//{
 
-//}
-//void BirdFactory::Cladogenesis(int id)
-//{
+void BirdFactory::Anagenesis(int oldId, int newId, bool undo)
+{
+    for (unsigned b = 0; b < birds_.Size(); b++){
+        if (birds_[b]->speciesId_ == oldId)
+            birds_[b]->SetSpecies(GetSpecies(newId), SpotToTargetCenter(spots_[newId], birds_[b]->first_), newId);
+    }
+}
 
-//}
-//void BirdFactory::Extinction(int id)
-//{
-
-//}
+void BirdFactory::Extinction(int id, bool undo)
+{
+    for (unsigned b = 0; b < birds_.Size(); b++){
+        if (birds_[b]->speciesId_ == id)
+            birds_[b]->Die(undo);
+    }
+}
 
 void BirdFactory::CreateBird(const int id, bool first)
 {
     Bird* bird = new Bird(context_, masterControl_, first);
-    bird->SetSpecies(species_[id], SpotToTargetCenter(spots_[id], first));
-    bird->Set(Quaternion(Random(360.0f), Vector3::UP) * (100.0f*Vector3::FORWARD+10.0f*Vector3::UP));
+    bird->SetSpecies(species_[id], SpotToTargetCenter(spots_[id], first), id);
+    bird->Set(Quaternion(45.0f+Random(90.0f)+Random(2)*180.0f+(!first*90.0f), Vector3::UP) * ((first*80.0f+10.0f)*Vector3::FORWARD+first*10.0f*Vector3::UP));
     birds_.Push(SharedPtr<Bird>(bird));
+    birdNumbers_[id] += !first;
 }
 
 Color BirdFactory::RandomColor()

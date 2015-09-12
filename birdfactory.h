@@ -37,6 +37,8 @@ enum class Gene{Scale, Red, Green, Blue, Size};
 class BirdFactory : public Object
 {
     OBJECT(BirdFactory);
+    friend class MasterControl;
+    friend class Bird;
 public:
     BirdFactory(Context* context, MasterControl* masterControl);
 
@@ -52,11 +54,16 @@ private:
     Vector<SharedPtr<Bird> > birds_;
     HashMap<int, Vector<float>* > species_;
     HashMap<int, IntVector2> spots_;
+    HashMap<int, bool> alive_;
+    HashMap<int, int> birdNumbers_;
 
     void CreateRandomSpecies(int id);
     void Speciate(int originalId, int newId);
     void CreateBird(int id, bool first = false);
     IntVector2 CreateSpot(IntVector2 original = IntVector2::ZERO);
+    void Evolve(TimeLine *timeLine);
+    void Extinction(int id, bool undo = false);
+    void Anagenesis(int oldId, int newId, bool undo = false);
 };
 
 #endif // BIRDFACTORY_H
