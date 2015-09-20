@@ -21,7 +21,7 @@
 
 TimeLine::TimeLine()
 {
-    std::ifstream f("Resources/Data/Example.txt");
+    std::ifstream f("Resources/Data/Example2.txt");
 
     while (!f.eof())
     {

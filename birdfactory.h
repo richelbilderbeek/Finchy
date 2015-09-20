@@ -43,11 +43,20 @@ public:
     BirdFactory(Context* context, MasterControl* masterControl);
 
     Color RandomColor();
-    Vector<float>* GetSpecies(int id){ return species_[id]; }
+    Vector<float>* GetSpecies(int id) { return species_[id]; }
     Vector3 SpotToTargetCenter(const IntVector2 spot, bool first);
     IntVector2 GetSpot(int id) { return spots_[id]; }
     int GetGenePairs() const { return genePairs_; }
     Vector3 GetFirstTarget(int id);
+
+    Color GetSpeciesColor(int id) {
+        if (species_.Contains(id)) {
+            return Color(species_[id]->At(static_cast<int>(Gene::Red)),
+                         species_[id]->At(static_cast<int>(Gene::Green)),
+                         species_[id]->At(static_cast<int>(Gene::Blue)));
+        }
+        else return Color::WHITE;
+    }
 private:
     MasterControl* masterControl_;
     int genePairs_;

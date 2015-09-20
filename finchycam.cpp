@@ -23,7 +23,7 @@ FinchyCam::FinchyCam(Context *context, MasterControl *masterControl):
     Object(context)
 {
     masterControl_ = masterControl;
-    SubscribeToEvent(E_SCENEUPDATE, HANDLER(FinchyCam, HandleSceneUpdate));
+    SubscribeToEvent(E_UPDATE, HANDLER(FinchyCam, HandleSceneUpdate));
 
     float viewRange= 123.0f;
     rootNode_ = masterControl_->world_.scene_->CreateChild("Camera");
@@ -49,17 +49,17 @@ void FinchyCam::SetupViewport()
     SharedPtr<Viewport> viewport(new Viewport(context_, masterControl_->world_.scene_, camera_));
     viewport_ = viewport;
 
-    //Add anti-asliasing and bloom
-    effectRenderPath_ = viewport_->GetRenderPath()->Clone();
-    effectRenderPath_->Append(masterControl_->cache_->GetResource<XMLFile>("PostProcess/FXAA3.xml"));
-    effectRenderPath_->SetEnabled("FXAA3", true);
-    effectRenderPath_->Append(masterControl_->cache_->GetResource<XMLFile>("PostProcess/Bloom.xml"));
-    effectRenderPath_->SetShaderParameter("BloomThreshold", 0.6f);
-    effectRenderPath_->SetShaderParameter("BloomMix", Vector2(0.75f, 0.5f));
-    effectRenderPath_->SetEnabled("Bloom", true);
+//    //Add anti-asliasing and bloom
+//    effectRenderPath_ = viewport_->GetRenderPath()->Clone();
+//    effectRenderPath_->Append(masterControl_->cache_->GetResource<XMLFile>("PostProcess/FXAA3.xml"));
+//    effectRenderPath_->SetEnabled("FXAA3", true);
+//    effectRenderPath_->Append(masterControl_->cache_->GetResource<XMLFile>("PostProcess/Bloom.xml"));
+//    effectRenderPath_->SetShaderParameter("BloomThreshold", 0.6f);
+//    effectRenderPath_->SetShaderParameter("BloomMix", Vector2(0.75f, 0.5f));
+//    effectRenderPath_->SetEnabled("Bloom", true);
 
     Renderer* renderer = GetSubsystem<Renderer>();
-    viewport_->SetRenderPath(effectRenderPath_);
+//    viewport_->SetRenderPath(effectRenderPath_);
     renderer->SetViewport(0, viewport_);
 }
 

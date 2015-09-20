@@ -31,6 +31,7 @@ MasterControl::MasterControl(Context *context):
     time_{timeLine_->GetBeginEnd().first},
     speed_{0.023f}
 {
+
 }
 
 
@@ -40,8 +41,8 @@ void MasterControl::Setup()
     engineParameters_["LogName"] = GetSubsystem<FileSystem>()->GetAppPreferencesDir("urho3d", "logs")+"TestVoxelWidget.log";
 //    engineParameters_["FullScreen"] = false;
     engineParameters_["Headless"] = false;
-    engineParameters_["WindowWidth"] = 1600;
-    engineParameters_["WindowHeight"] = 900;
+//    engineParameters_["WindowWidth"] = 960;
+//    engineParameters_["WindowHeight"] = 540;
 }
 void MasterControl::Start()
 {
@@ -64,7 +65,6 @@ void MasterControl::Stop()
 void MasterControl::SubscribeToEvents()
 {
     SubscribeToEvent(E_UPDATE, HANDLER(MasterControl, HandleUpdate));
-    SubscribeToEvent(E_SCENEUPDATE, HANDLER(MasterControl, HandleSceneUpdate));
 }
 
 void MasterControl::CreateConsoleAndDebugHud()
@@ -87,31 +87,48 @@ void MasterControl::CreateUI()
     ui->SetCursor(world_.cursor.uiCursor_);
     world_.cursor.uiCursor_->SetPosition(graphics_->GetWidth()/2, graphics_->GetHeight()/2);
 
+    //Create graphical timeline
+    Node* timelineNode = world_.scene_->CreateChild("TimeLine");
+    timelineNode->SetPosition(Finchy::Scale(TimeToMarkerPosition(0.0f), Vector3(0.0f, 1.0f, 1.0f)));
+    timelineNode->SetScale(Vector3(42.0f, 1.0f, 1.0f));
+    StaticModel* timelineModel = timelineNode->CreateComponent<StaticModel>();
+    timelineModel->SetModel(cache_->GetResource<Model>("Resources/Models/Line.mdl"));
+    timelineModel->SetMaterial(cache_->GetResource<Material>("Resources/Materials/Line.xml"));
     for (unsigned e = 0; e < timeLine_->events_.Size(); e++)
     {
         Node* markerNode = world_.scene_->CreateChild("Marker");
-        markerNode->SetPosition(TimeToMarkerPosition(timeLine_->events_[e]->time_));
+        markerNode->SetPosition(Vector3::RIGHT*0.1f+TimeToMarkerPosition(timeLine_->events_[e]->time_));
         markerNode->SetScale(Vector3(1.0f, 1.0f, 0.5f));
         StaticModel* markerModel = markerNode->CreateComponent<StaticModel>();
         switch (timeLine_->events_[e]->type_){
         case Finchy::EventType::Immigration: {
             markerModel->SetModel(cache_->GetResource<Model>("Resources/Models/ImmigrationMarker.mdl"));
-            markerModel->SetMaterial(cache_->GetResource<Material>("Resources/Materials/Gold.xml"));
+            markerModel->SetMaterial(cache_->GetTempResource<Material>("Resources/Materials/Marker.xml"));
+            markerModel->GetMaterial(0)->SetShaderParameter("MatDiffColor", birdFactory_->GetSpeciesColor(timeLine_->events_[e]->species_[0]));
             markerNode->Translate(Vector3::FORWARD*0.4f);
         } break;
         case Finchy::EventType::Anagenesis: {
             markerModel->SetModel(cache_->GetResource<Model>("Resources/Models/AnagenesisMarker.mdl"));
-            markerModel->SetMaterial(cache_->GetResource<Material>("Resources/Materials/Bronze.xml"));
+            markerModel->SetMaterial(0,cache_->GetTempResource<Material>("Resources/Materials/Marker.xml"));
+            markerModel->GetMaterial(0)->SetShaderParameter("MatDiffColor", birdFactory_->GetSpeciesColor(timeLine_->events_[e]->species_[1]));
+            markerModel->SetMaterial(1,cache_->GetTempResource<Material>("Resources/Materials/Marker.xml"));
+            markerModel->GetMaterial(1)->SetShaderParameter("MatDiffColor", birdFactory_->GetSpeciesColor(timeLine_->events_[e]->species_[0]));
             markerNode->Translate(Vector3::FORWARD*0.3f);
         } break;
         case Finchy::EventType::Cladogenesis: {
             markerModel->SetModel(cache_->GetResource<Model>("Resources/Models/CladogenesisMarker.mdl"));
-            markerModel->SetMaterial(cache_->GetResource<Material>("Resources/Materials/Silver.xml"));
+            markerModel->SetMaterial(0,cache_->GetTempResource<Material>("Resources/Materials/Marker.xml"));
+            markerModel->GetMaterial(0)->SetShaderParameter("MatDiffColor", birdFactory_->GetSpeciesColor(timeLine_->events_[e]->species_[2]));
+            markerModel->SetMaterial(1,cache_->GetTempResource<Material>("Resources/Materials/Marker.xml"));
+            markerModel->GetMaterial(1)->SetShaderParameter("MatDiffColor", birdFactory_->GetSpeciesColor(timeLine_->events_[e]->species_[0]));
+            markerModel->SetMaterial(2,cache_->GetTempResource<Material>("Resources/Materials/Marker.xml"));
+            markerModel->GetMaterial(2)->SetShaderParameter("MatDiffColor", birdFactory_->GetSpeciesColor(timeLine_->events_[e]->species_[1]));
             markerNode->Translate(Vector3::FORWARD*0.2f);
         } break;
         case Finchy::EventType::Extinction: {
             markerModel->SetModel(cache_->GetResource<Model>("Resources/Models/ExtinctionMarker.mdl"));
-            markerModel->SetMaterial(cache_->GetResource<Material>("Resources/Materials/Black.xml"));
+            markerModel->SetMaterial(cache_->GetTempResource<Material>("Resources/Materials/Marker.xml"));
+            markerModel->GetMaterial(0)->SetShaderParameter("MatDiffColor", birdFactory_->GetSpeciesColor(timeLine_->events_[e]->species_[0]));
             markerNode->Translate(Vector3::FORWARD*0.1f);
         } break;
         default:break;
@@ -132,6 +149,7 @@ void MasterControl::CreateScene()
     world_.scene_->CreateComponent<DebugRenderer>();
 
     //PhysicsWorld* physicsWorld = world.scene->CreateComponent<PhysicsWorld>();
+
     skyNode_ = world_.scene_->CreateChild("Sky");
     skyNode_->SetScale(500.0f); // The scale actually does not matter
     Skybox* skybox = skyNode_->CreateComponent<Skybox>();
@@ -140,11 +158,11 @@ void MasterControl::CreateScene()
 
     //Create a directional light to the world. Enable cascaded shadows on it
     Node* lightNode = world_.scene_->CreateChild("DirectionalLight");
-    lightNode->SetPosition(Vector3(-5.0f, 10.0f, 7.0f));
+    lightNode->SetPosition(Vector3(-5.0f, 10.0f, -7.0f));
     lightNode->LookAt(Vector3(0.0f, 0.0f, 0.0f));
     Light* light = lightNode->CreateComponent<Light>();
     light->SetLightType(LIGHT_DIRECTIONAL);
-    light->SetBrightness(1.23f);
+    light->SetBrightness(1.5f);
     light->SetColor(Color(0.8f, 0.95f, 0.9f));
     light->SetCastShadows(true);
     light->SetShadowIntensity(0.7f);
@@ -181,10 +199,6 @@ void MasterControl::CreateScene()
 
 void MasterControl::HandleUpdate(StringHash eventType, VariantMap &eventData)
 {
-}
-
-void MasterControl::HandleSceneUpdate(StringHash eventType, VariantMap &eventData)
-{
     using namespace SceneUpdate;
     float timeStep = eventData[P_TIMESTEP].GetFloat();
     float deltaTime = -timeStep*speed_;
@@ -207,7 +221,7 @@ void MasterControl::HandleSceneUpdate(StringHash eventType, VariantMap &eventDat
     Vector<int> speciesIds = birdFactory_->alive_.Keys();
     for (unsigned s = 0; s < speciesIds.Size(); s++){
         int id = speciesIds[s];
-        if (birdFactory_->alive_[id] == true && birdFactory_->birdNumbers_[id] < 23)
+        if (birdFactory_->alive_[id] == true && birdFactory_->birdNumbers_[id] < 10)
             birdFactory_->CreateBird(id);
     }
 }

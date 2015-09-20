@@ -38,6 +38,7 @@ class Bird : public Object
 public:
     Bird(Context* context, MasterControl* masterControl, bool first = false);
 
+    static int populationSize_;
     bool first_;
     int speciesId_;
     void Set(Vector3 position);
@@ -47,6 +48,7 @@ public:
     void Morph();
     void Die(bool undo = false);
     BirdState GetState();
+    ~Bird();
 private:
     MasterControl* masterControl_;
     BirdFactory* birdFactory_;

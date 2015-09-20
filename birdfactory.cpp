@@ -78,7 +78,7 @@ Vector3 BirdFactory::SpotToTargetCenter(const IntVector2 spot, bool first)
         float z = (spot.y_ * 7.5f) - 35.0f;
         return Vector3(x, y, z);
     } else {
-        float x = (spot.x_ * 2.0f) - 11.0f;
+        float x = (spot.x_ * 2.0f) - 11.0f + spot.y_%2;
         float y = Random(7.0f, 10.0f);
         float z = (spot.y_ * 1.5f) - 50.0f;
         return Vector3(x, y, z);
@@ -182,8 +182,8 @@ Color BirdFactory::RandomColor()
 {
     Color randomColor;
     float hue = Random(6)/6.0f;
-    float saturation = pow(Random(), 3.0f);
-    float value = Random();
+    float saturation = Random(3)*0.333f+0.333f;//pow(Random(), 3.0f);
+    float value = Random(4)*0.25f+0.25f;//Random();
     randomColor.FromHSV(hue, saturation, value);
     return randomColor;
 }

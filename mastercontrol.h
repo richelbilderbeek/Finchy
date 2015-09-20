@@ -143,7 +143,6 @@ private:
     void CreateUI();
     void SubscribeToEvents();
 
-    void HandleSceneUpdate(StringHash eventType, VariantMap& eventData);
     void HandleUpdate(StringHash eventType, VariantMap& eventData);
 
     void CreatePlatform(const Vector3 pos);

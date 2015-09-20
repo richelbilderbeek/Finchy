@@ -20,6 +20,8 @@
 #include "bird.h"
 #include "birdfactory.h"
 
+int Bird::populationSize_ = 0;
+
 Bird::Bird(Context *context, MasterControl *masterControl, bool first) : Object(context),
     first_{first},
     masterControl_{masterControl},
@@ -30,12 +32,15 @@ Bird::Bird(Context *context, MasterControl *masterControl, bool first) : Object(
     species_{0},
     previousSpecies_{0},
     speciesId_{0},
-    morphTime_{0.5f},
+    morphTime_{2.0f},
     sinceSpeciesSet_{0.0f},
     sinceStateChange_{0.0f},
     stateDuration_{10.0f},
-    touchDown_{false}
+    touchDown_{false},
+    dead_{false}
 {
+    ++populationSize_;
+
     rootNode_ = masterControl_->world_.scene_->CreateChild("Bird");
     rootNode_->Rotate(Quaternion(Random(360.0f), Vector3::UP));
 
@@ -58,11 +63,14 @@ Bird::Bird(Context *context, MasterControl *masterControl, bool first) : Object(
 //    }
 }
 
+Bird::~Bird()
+{
+    --populationSize_;
+}
 
 void Bird::Set(Vector3 position) {
     rootNode_->SetPosition(position);
     rootNode_->SetEnabledRecursive(true);
-
     SubscribeToEvent(E_UPDATE, HANDLER(Bird, HandleUpdate));
 }
 void Bird::Disable() {
@@ -82,6 +90,7 @@ void Bird::SetSpecies(Vector<float>* species, Vector3 targetCenter, int id)
 }
 void Bird::Die(bool undo)
 {
+    Disable();
     dead_ != undo;
     animCtrl_->StopAll(0.1f);
 }
@@ -114,7 +123,7 @@ void Bird::HandleUpdate(StringHash eventType, VariantMap &eventData)
 {
     if (dead_ && GetPosition().y_ < -5.0f) Disable();
 
-    float timeStep = eventData[Update::P_TIMESTEP].GetFloat();
+    float timeStep = eventData[SceneUpdate::P_TIMESTEP].GetFloat();
     if (sinceSpeciesSet_ < morphTime_){
         Morph();
     }
@@ -143,9 +152,6 @@ void Bird::HandleUpdate(StringHash eventType, VariantMap &eventData)
     } break;
     case BirdState::Standing: {
         Stand(timeStep);
-        if (dead_){
-            animCtrl_->Play("Resources/Models/Die.ani", 0, false, 0.23f);
-        }
     } break;
     default:
         break;
@@ -167,14 +173,20 @@ void Bird::SetState(BirdState state)
 {
     animCtrl_->StopAll(1.0f);
     sinceStateChange_ = 0.0f;
-    stateDuration_ = first_? 2.0f : Random(5.0f, 10.0f);
+    stateDuration_ = first_? 10.0f : Random(5.0f, 10.0f);
     if (state == BirdState::Landing) {
         target_ = GroundTarget();
         animCtrl_->Play("Resources/Models/Soar.ani", 0, true, 1.0f);
     }
     if (state == BirdState::Standing) {
-        if (first_ && !dead_) birdFactory_->alive_[speciesId_] = true;
-        animCtrl_->Play("Resources/Models/LookAround.ani", 0, true, 1.0f);
+        if (!dead_) {
+            if (first_) birdFactory_->alive_[speciesId_] = true;
+            animCtrl_->Play("Resources/Models/LookAround.ani", 0, true, 1.0f);
+        }
+        else {
+            animCtrl_->StopAll(0.1f);
+            animCtrl_->Play("Resources/Models/Die.ani", 1, false, 0.23f);
+        }
         rootNode_->LookAt(Finchy::Scale(GetPosition()+rootNode_->GetDirection()*23.0f, Vector3(1.0f, 0.0f, 1.0f)));
     }
     if (state == BirdState::Flying) {
@@ -191,31 +203,29 @@ BirdState Bird::GetState()
 
 void Bird::Fly(float timeStep)
 {
-    if (dead_) velocity_ += Vector3::DOWN*0.981f;
-    else {
-        Vector3 targetDelta = target_ - GetPosition();
-        Vector3 beforeVelocity = velocity_;
-        bool limit = velocity_.Angle(targetDelta) < 90.0f && velocity_.Length() > maxVelocity_;
-        if (!limit) velocity_ += 5.0f * timeStep * targetDelta.Normalized()*Clamp(targetDelta.Length(), 2.0f, 3.0f);
-        if (targetDelta.Angle(rootNode_->GetDirection()) > 90.0f && seenTarget_){
-            target_ = AirTarget();
-            seenTarget_ = false;
-        }
-        else if (targetDelta.Angle(rootNode_->GetDirection()) < 90.0f){
-            seenTarget_ = true;
-        }
-        velocity_ *= 0.99f;
-        Vector3 acceleration = velocity_ - beforeVelocity;
-        animCtrl_->SetSpeed("Resources/Models/Fly.ani", 3.0f - species_->At((int)Gene::Scale)+0.1f*acceleration.y_);
-        if (acceleration.Length() / (0.01f+timeStep) < 7.0f) animCtrl_->Play("Resources/Models/Soar.ani", 1, true, 0.23f);
-        else animCtrl_->Stop("Resources/Models/Soar.ani", 0.1f);
+//    velocity_ += timeStep*Vector3::DOWN*1.5f;
+    Vector3 targetDelta = target_ - GetPosition();
+    Vector3 beforeVelocity = velocity_;
+    bool limit = velocity_.Angle(targetDelta) < 90.0f && velocity_.Length() > maxVelocity_;
+    if (!limit) velocity_ += 6.0f * timeStep * targetDelta.Normalized()*Clamp(targetDelta.Length(), 2.0f, 3.0f);
+    if (targetDelta.Angle(rootNode_->GetDirection()) > 90.0f && seenTarget_){
+        target_ = AirTarget();
+        seenTarget_ = false;
     }
+    else if (targetDelta.Angle(rootNode_->GetDirection()) < 90.0f){
+        seenTarget_ = true;
+    }
+    velocity_ *= 0.99f;
+    Vector3 acceleration = velocity_ - beforeVelocity;
+    animCtrl_->SetSpeed("Resources/Models/Fly.ani", 3.0f - species_->At((int)Gene::Scale)+0.1f*acceleration.y_);
+    if (acceleration.Length() / (0.01f+timeStep) < 7.0f) animCtrl_->Play("Resources/Models/Soar.ani", 1, true, 0.23f);
+    else animCtrl_->Stop("Resources/Models/Soar.ani", 0.1f);
 }
 
 void Bird::Land(float timeStep)
 {
     Vector3 targetDelta = target_ - GetPosition();
-    if (targetDelta.Length() < 2.3f){
+    if (targetDelta.Length() < 0.5f){
         if (!touchDown_){
             touchDown_ = true;
             animCtrl_->StopAll(0.1f);
@@ -231,8 +241,10 @@ void Bird::Land(float timeStep)
             SetState(BirdState::Standing);
         }
     }
-    velocity_ += 7.0f * timeStep * targetDelta.Normalized() * Clamp( targetDelta.Length()*0.5f, 2.0f, 4.0f ) - Finchy::Scale(velocity_, Vector3(0.023f, 0.1f, 0.023f));
+    velocity_ += 23.0f * timeStep * targetDelta.Normalized() * Clamp( targetDelta.Length()*0.5f, 2.0f, 4.0f ) - Finchy::Scale(velocity_, Vector3(0.023f, 0.23f, 0.023f));
     velocity_ *= Clamp( 0.2f + targetDelta.Length() * 0.666f, 0.2f, 0.95f );
+    velocity_.x_ = Clamp(velocity_.x_, -targetDelta.Length(), targetDelta.Length());
+    velocity_.y_ = Clamp(velocity_.y_, -targetDelta.Length(), targetDelta.Length());
 }
 
 void Bird::Stand(float timeStep)
@@ -249,7 +261,7 @@ void Bird::Stand(float timeStep)
 
 Vector3 Bird::AirTarget()
 {
-    float randomAngle = (2.0f*(Random(2)-0.5f)) * Random(10.0f, 42.0f);
+    float randomAngle = Finchy::RandomSign() * Random(10.0f, 42.0f);
     Vector3 planarDirection = (rootNode_->GetDirection() * (Vector3::ONE-Vector3::UP)).Normalized();
     Vector3 newTarget = GetPosition() + (Random(5.0f, 10.0f) * (Quaternion(randomAngle, Vector3::UP) * planarDirection));
     float heightGain = Clamp((10.0f - target_.y_)/23.0f, 0.0f, 0.5f);

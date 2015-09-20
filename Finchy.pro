@@ -5,6 +5,10 @@ LIBS += ../Finchy/Urho3D/lib/libUrho3D.a \
 
 DEFINES += URHO3D_COMPILE_QT
 
+#CONFIG(release,debug|release) {
+#  DEFINES += NDEBUG
+#}
+
 QMAKE_CXXFLAGS += -std=c++11
 
 INCLUDEPATH += \
