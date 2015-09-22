@@ -90,9 +90,10 @@ void Bird::SetSpecies(Vector<float>* species, Vector3 targetCenter, int id)
 }
 void Bird::Die(bool undo)
 {
-    Disable();
+    if (!first_) Disable();
     dead_ != undo;
     animCtrl_->StopAll(0.1f);
+    animCtrl_->Play("Resources/Models/Die.ani", 1, false, 0.23f);
 }
 
 void Bird::Morph()
@@ -203,11 +204,11 @@ BirdState Bird::GetState()
 
 void Bird::Fly(float timeStep)
 {
-//    velocity_ += timeStep*Vector3::DOWN*1.5f;
     Vector3 targetDelta = target_ - GetPosition();
     Vector3 beforeVelocity = velocity_;
     bool limit = velocity_.Angle(targetDelta) < 90.0f && velocity_.Length() > maxVelocity_;
     if (!limit) velocity_ += 6.0f * timeStep * targetDelta.Normalized()*Clamp(targetDelta.Length(), 2.0f, 3.0f);
+    velocity_ += dead_*timeStep*Vector3::DOWN*23.0f;
     if (targetDelta.Angle(rootNode_->GetDirection()) > 90.0f && seenTarget_){
         target_ = AirTarget();
         seenTarget_ = false;

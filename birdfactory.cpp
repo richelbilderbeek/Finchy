@@ -183,7 +183,7 @@ Color BirdFactory::RandomColor()
     Color randomColor;
     float hue = Random(6)/6.0f;
     float saturation = Random(3)*0.333f+0.333f;//pow(Random(), 3.0f);
-    float value = Random(4)*0.25f+0.25f;//Random();
+    float value = Random(2)*0.5f+0.5f;//Random();
     randomColor.FromHSV(hue, saturation, value);
     return randomColor;
 }
