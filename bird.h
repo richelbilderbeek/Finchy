@@ -34,7 +34,7 @@ enum class BirdState { Standing, Hopping, LiftingOff, Flying, Landing, Extinct }
 
 class Bird : public Object
 {
-    OBJECT(Bird);
+    URHO3D_OBJECT(Bird, Object);
 public:
     Bird(Context* context, MasterControl* masterControl, bool first = false);
 

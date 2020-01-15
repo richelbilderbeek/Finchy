@@ -24,12 +24,12 @@ InputMaster::InputMaster(Context* context, MasterControl* masterControl) : Objec
     masterControl_{masterControl},
     input_{GetSubsystem<Input>()}
 {
-    SubscribeToEvent(E_MOUSEBUTTONDOWN, HANDLER(InputMaster, HandleMouseButtonDown));
-    SubscribeToEvent(E_MOUSEBUTTONUP, HANDLER(InputMaster, HandleMouseButtonUp));
-    SubscribeToEvent(E_KEYDOWN, HANDLER(InputMaster, HandleKeyDown));
-    SubscribeToEvent(E_KEYUP, HANDLER(InputMaster, HandleKeyUp));
-    SubscribeToEvent(E_JOYSTICKBUTTONDOWN, HANDLER(InputMaster, HandleJoystickButtonDown));
-    SubscribeToEvent(E_JOYSTICKBUTTONUP, HANDLER(InputMaster, HandleJoystickButtonUp));
+    SubscribeToEvent(E_MOUSEBUTTONDOWN, URHO3D_HANDLER(InputMaster, HandleMouseButtonDown));
+    SubscribeToEvent(E_MOUSEBUTTONUP, URHO3D_HANDLER(InputMaster, HandleMouseButtonUp));
+    SubscribeToEvent(E_KEYDOWN, URHO3D_HANDLER(InputMaster, HandleKeyDown));
+    SubscribeToEvent(E_KEYUP, URHO3D_HANDLER(InputMaster, HandleKeyUp));
+    SubscribeToEvent(E_JOYSTICKBUTTONDOWN, URHO3D_HANDLER(InputMaster, HandleJoystickButtonDown));
+    SubscribeToEvent(E_JOYSTICKBUTTONUP, URHO3D_HANDLER(InputMaster, HandleJoystickButtonUp));
 }
 
 void InputMaster::HandleKeyDown(StringHash eventType, VariantMap &eventData)
@@ -41,7 +41,7 @@ void InputMaster::HandleKeyDown(StringHash eventType, VariantMap &eventData)
     Graphics* graphics = GetSubsystem<Graphics>();
     switch (key){
         //Exit when ESC is pressed
-    case KEY_ESC:{
+    case Urho3D::KEY_ESCAPE: {
         masterControl_->Exit();
     } break;
         //Take screenshot

@@ -1,19 +1,17 @@
-LIBS += ../Finchy/Urho3D/lib/libUrho3D.a \
+LIBS += ../Urho3D/lib/libUrho3D.a \
     -lpthread \
     -ldl \
     -lGL
 
 DEFINES += URHO3D_COMPILE_QT
 
-#CONFIG(release,debug|release) {
-#  DEFINES += NDEBUG
-#}
-
-QMAKE_CXXFLAGS += -std=c++11
+CONFIG(release,debug|release) {
+  DEFINES += NDEBUG
+}
 
 INCLUDEPATH += \
-    ../Finchy/Urho3D/include \
-    ../Finchy/Urho3D/include/Urho3D/ThirdParty \
+    ../Urho3D/include \
+    ../Urho3D/include/Urho3D/ThirdParty \
 
 TEMPLATE = app
 CONFIG += console

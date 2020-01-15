@@ -71,7 +71,7 @@ Bird::~Bird()
 void Bird::Set(Vector3 position) {
     rootNode_->SetPosition(position);
     rootNode_->SetEnabledRecursive(true);
-    SubscribeToEvent(E_UPDATE, HANDLER(Bird, HandleUpdate));
+    SubscribeToEvent(E_UPDATE, URHO3D_HANDLER(Bird, HandleUpdate));
 }
 void Bird::Disable() {
     rootNode_->SetEnabledRecursive(false);

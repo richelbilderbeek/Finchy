@@ -36,7 +36,7 @@ enum class Gene{Scale, Red, Green, Blue, Size};
 
 class BirdFactory : public Object
 {
-    OBJECT(BirdFactory);
+    URHO3D_OBJECT(BirdFactory, Object);
     friend class MasterControl;
     friend class Bird;
 public:

@@ -23,7 +23,7 @@ FinchyCam::FinchyCam(Context *context, MasterControl *masterControl):
     Object(context)
 {
     masterControl_ = masterControl;
-    SubscribeToEvent(E_UPDATE, HANDLER(FinchyCam, HandleSceneUpdate));
+    SubscribeToEvent(E_UPDATE, URHO3D_HANDLER(FinchyCam, HandleSceneUpdate));
 
     float viewRange= 123.0f;
     rootNode_ = masterControl_->world_.scene_->CreateChild("Camera");

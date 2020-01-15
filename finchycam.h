@@ -38,7 +38,7 @@ using namespace Urho3D;
 
 class FinchyCam : public Object
 {
-    OBJECT(FinchyCam);
+    URHO3D_OBJECT(FinchyCam, Object);
     friend class MasterControl;
     friend class InputMaster;
 public:
